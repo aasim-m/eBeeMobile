@@ -18,6 +18,7 @@ WORKLOAD_B_BROWSER_URL="about:blank"
 WORKLOAD_B_BROWSER_COMPONENT="${WORKLOAD_B_BROWSER_COMPONENT:-org.chromium.webview_shell/.WebViewBrowserActivity}"
 SCROLL_URL="${SCROLL_URL:-https://www.pexels.com/search/nature/}"
 BROWSER_CLEAR_PACKAGES="${BROWSER_CLEAR_PACKAGES:-org.chromium.webview_shell,com.android.chrome,com.google.android.apps.chrome}"
+WORKLOAD_C_GFXINFO_PACKAGE="${WORKLOAD_C_GFXINFO_PACKAGE:-org.chromium.webview_shell}"
 
 usage() {
   cat <<'EOF'
@@ -35,6 +36,7 @@ Options:
   --workload-b-browser-component CMP  Explicit browser component for Workload B about:blank launch
   --scroll-url URL     Scrollable URL for Workloads C/D (default: Pexels nature search)
   --browser-clear-packages CSV  Comma-separated browser packages to clear before Workloads C/D
+  --workload-c-gfxinfo-package PKG  Package name to query for Workload C/D gfxinfo ground truth
   --device-dir DIR     Device-side staging directory
   --help               Show this message
 EOF
@@ -80,6 +82,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --browser-clear-packages)
       BROWSER_CLEAR_PACKAGES="$2"
+      shift 2
+      ;;
+    --workload-c-gfxinfo-package)
+      WORKLOAD_C_GFXINFO_PACKAGE="$2"
       shift 2
       ;;
     --device-dir)
@@ -255,6 +261,20 @@ clear_browser_app_data() {
   sleep 1
 }
 
+reset_browser_gfxinfo() {
+  run_device_shell "dumpsys gfxinfo ${WORKLOAD_C_GFXINFO_PACKAGE} reset >/dev/null 2>&1 || true"
+}
+
+capture_browser_gfxinfo() {
+  local outfile="$1"
+  run_device_shell_capture "dumpsys gfxinfo ${WORKLOAD_C_GFXINFO_PACKAGE}" > "$outfile"
+}
+
+capture_browser_meminfo() {
+  local outfile="$1"
+  run_device_shell_capture "dumpsys meminfo ${WORKLOAD_C_GFXINFO_PACKAGE}" > "$outfile"
+}
+
 normalize_device_state() {
   ensure_screen_on_and_unlocked
   set_device_brightness
@@ -269,6 +289,7 @@ prepare_workload_state() {
       echo "Resetting browser state for ${workload}"
       clear_browser_app_data
       force_stop_browser_apps
+      reset_browser_gfxinfo
       reset_to_home
       ;;
   esac
@@ -332,6 +353,41 @@ burst_gap_ms=${BURST_GAP_MS}
 EOF
 }
 
+extract_am_start_field() {
+  local text="$1"
+  local key="$2"
+  printf '%s\n' "$text" | sed -n "s/^${key}: //p" | head -n 1
+}
+
+init_launch_ground_truth_csv() {
+  local run_dir="$1"
+  cat > "${run_dir}/launch_ground_truth.csv" <<EOF
+episode,status,launch_state,activity,this_time_ms,total_time_ms,wait_time_ms,error
+EOF
+}
+
+append_launch_ground_truth_csv() {
+  local csv_path="$1"
+  local episode="$2"
+  local raw_output="$3"
+  local status launch_state activity this_time total_time wait_time error
+
+  status="$(extract_am_start_field "$raw_output" "Status")"
+  launch_state="$(extract_am_start_field "$raw_output" "LaunchState")"
+  activity="$(extract_am_start_field "$raw_output" "Activity")"
+  this_time="$(extract_am_start_field "$raw_output" "ThisTime")"
+  total_time="$(extract_am_start_field "$raw_output" "TotalTime")"
+  wait_time="$(extract_am_start_field "$raw_output" "WaitTime")"
+  error="$(printf '%s\n' "$raw_output" | sed -n 's/^Error: //p' | head -n 1)"
+
+  if [[ -n "${error}" && -z "${status}" ]]; then
+    status="error"
+  fi
+
+  printf '"%s","%s","%s","%s","%s","%s","%s","%s"\n' \
+    "$episode" "$status" "$launch_state" "$activity" "$this_time" "$total_time" "$wait_time" "$error" >> "$csv_path"
+}
+
 run_marked_device_command() {
   local workload="$1"
   local run="$2"
@@ -343,22 +399,45 @@ run_marked_device_command() {
   write_substep_marker "$workload" "$run" "${marker_prefix}_END"
 }
 
+run_marked_device_command_capture() {
+  local workload="$1"
+  local run="$2"
+  local marker_prefix="$3"
+  local cmd="$4"
+  local outfile="$5"
+  local output
+
+  write_substep_marker "$workload" "$run" "${marker_prefix}_START"
+  output="$(run_device_shell_capture "$cmd")"
+  printf '%s\n' "$output" | tee "$outfile"
+  write_substep_marker "$workload" "$run" "${marker_prefix}_END"
+}
+
 run_workload() {
   local workload="$1"
   local run="$2"
+  local run_dir="$3"
+  local launch_output
   case "$workload" in
     workload_a)
       run_device_shell "input keyevent KEYCODE_HOME; sleep ${IDLE_SECONDS}"
       ;;
     workload_b)
-      run_marked_device_command "$workload" "$run" "SETTINGS_LAUNCH" \
-        "am start -W -a android.settings.SETTINGS"
+      init_launch_ground_truth_csv "$run_dir"
+      launch_output="$(run_marked_device_command_capture "$workload" "$run" "SETTINGS_LAUNCH" \
+        "am start -W -a android.settings.SETTINGS" \
+        "${run_dir}/ground_truth_settings_launch.txt")"
+      append_launch_ground_truth_csv "${run_dir}/launch_ground_truth.csv" "settings_launch" "$launch_output"
       sleep "${SETTLE_SECONDS}"
-      run_marked_device_command "$workload" "$run" "BROWSER_LAUNCH" \
-        "am start -W -n ${WORKLOAD_B_BROWSER_COMPONENT} -d ${WORKLOAD_B_BROWSER_URL}"
+      launch_output="$(run_marked_device_command_capture "$workload" "$run" "BROWSER_LAUNCH" \
+        "am start -W -n ${WORKLOAD_B_BROWSER_COMPONENT} -d ${WORKLOAD_B_BROWSER_URL}" \
+        "${run_dir}/ground_truth_browser_launch.txt")"
+      append_launch_ground_truth_csv "${run_dir}/launch_ground_truth.csv" "browser_launch" "$launch_output"
       sleep "${SETTLE_SECONDS}"
-      run_marked_device_command "$workload" "$run" "GALLERY_LAUNCH" \
-        "am start -W -n com.android.gallery3d/com.android.gallery3d.app.Gallery"
+      launch_output="$(run_marked_device_command_capture "$workload" "$run" "GALLERY_LAUNCH" \
+        "am start -W -n com.android.gallery3d/com.android.gallery3d.app.Gallery" \
+        "${run_dir}/ground_truth_gallery_launch.txt")"
+      append_launch_ground_truth_csv "${run_dir}/launch_ground_truth.csv" "gallery_launch" "$launch_output"
       sleep "${SETTLE_SECONDS}"
       run_marked_device_command "$workload" "$run" "RETURN_HOME" \
         "input keyevent KEYCODE_HOME"
@@ -368,25 +447,42 @@ run_workload() {
         "am start -W -a android.intent.action.VIEW -d ${SCROLL_URL}"
       sleep "${PAGE_SETTLE_SECONDS}"
       write_substep_marker "$workload" "$run" "PAGE_SETTLED"
+      capture_browser_gfxinfo "${run_dir}/ground_truth_page_load_gfxinfo.txt"
+      capture_browser_meminfo "${run_dir}/ground_truth_page_load_meminfo.txt"
+      reset_browser_gfxinfo
       run_marked_device_command "$workload" "$run" "SWIPE_1" \
         "input swipe 500 1600 500 300 200"
       sleep "${SWIPE_PAUSE_SECONDS}"
+      capture_browser_gfxinfo "${run_dir}/ground_truth_swipe_1_gfxinfo.txt"
+      capture_browser_meminfo "${run_dir}/ground_truth_swipe_1_meminfo.txt"
+      reset_browser_gfxinfo
       run_marked_device_command "$workload" "$run" "SWIPE_2" \
         "input swipe 500 1600 500 300 200"
       sleep "${SWIPE_PAUSE_SECONDS}"
+      capture_browser_gfxinfo "${run_dir}/ground_truth_swipe_2_gfxinfo.txt"
+      capture_browser_meminfo "${run_dir}/ground_truth_swipe_2_meminfo.txt"
+      reset_browser_gfxinfo
       run_marked_device_command "$workload" "$run" "SWIPE_3" \
         "input swipe 500 300 500 1600 200"
+      sleep "${SWIPE_PAUSE_SECONDS}"
+      capture_browser_gfxinfo "${run_dir}/ground_truth_swipe_3_gfxinfo.txt"
+      capture_browser_meminfo "${run_dir}/ground_truth_swipe_3_meminfo.txt"
       ;;
     workload_d)
       run_marked_device_command "$workload" "$run" "PAGE_LOAD" \
         "am start -W -a android.intent.action.VIEW -d ${SCROLL_URL}"
       sleep "${PAGE_SETTLE_SECONDS}"
       write_substep_marker "$workload" "$run" "PAGE_SETTLED"
+      capture_browser_gfxinfo "${run_dir}/ground_truth_page_load_gfxinfo.txt"
+      capture_browser_meminfo "${run_dir}/ground_truth_page_load_meminfo.txt"
+      reset_browser_gfxinfo
       run_marked_device_command "$workload" "$run" "RETURN_HOME" \
         "input keyevent KEYCODE_HOME"
       write_substep_marker "$workload" "$run" "BACKGROUND_WINDOW_START"
       sleep "${BACKGROUND_SECONDS}"
       write_substep_marker "$workload" "$run" "BACKGROUND_WINDOW_END"
+      capture_browser_gfxinfo "${run_dir}/ground_truth_background_gfxinfo.txt"
+      capture_browser_meminfo "${run_dir}/ground_truth_background_meminfo.txt"
       ;;
     *)
       echo "Unknown workload: $workload" >&2
@@ -435,7 +531,7 @@ for workload in workload_a workload_b workload_c workload_d; do
     start_syscall_trace_capture
     start_ts="$(date +%s.%N)"
     write_trace_marker "WORKLOAD_${workload}_RUN_${run}_START"
-    run_workload "$workload" "$run"
+    run_workload "$workload" "$run" "$run_dir"
     write_trace_marker "WORKLOAD_${workload}_RUN_${run}_END"
     sleep "${SETTLE_SECONDS}"
     end_ts="$(date +%s.%N)"

@@ -1,6 +1,10 @@
+<p align="center">
+  <img src="assets/eBeeMobile.svg" alt="eBeeMobile" />
+</p>
+
 # eBeeMobile
 
-eBeeMobile is an Android eBPF observability project inspired by eBeeMetrics. It adapts the idea of deriving higher-level performance signals from low-level kernel events to mobile workloads.
+eBeeMobile is an Android eBPF observability project inspired by eBeeMetrics [1]. It adapts the idea of deriving higher-level performance signals from low-level kernel events to mobile workloads.
 
 It combines existing eBPF probes with an experiment harness and a post-processing pipeline to:
 
@@ -117,7 +121,8 @@ Optional workload-tuning overrides:
   --workload-b-browser-component org.chromium.webview_shell/.WebViewBrowserActivity \
   --scroll-url https://www.pexels.com/search/nature/ \
   --page-settle-seconds 5 \
-  --browser-clear-packages org.chromium.webview_shell,com.android.chrome
+  --browser-clear-packages org.chromium.webview_shell,com.android.chrome \
+  --workload-c-gfxinfo-package org.chromium.webview_shell
 ```
 
 The runner:
@@ -131,7 +136,10 @@ The runner:
 7. Resets all maps before each run.
 8. Captures a timestamped syscall trace for each run using `raw_syscalls:sys_enter`.
 9. Captures monitor outputs into structured host-side directories.
-10. Invokes the analysis script to generate report-ready summaries and pseudo-request metrics.
+10. Captures per-launch `am start -W` ground truth for Workload B under `launch_ground_truth.csv`.
+11. Captures per-episode `dumpsys gfxinfo` ground truth for Workload C under `ground_truth_*_gfxinfo.txt`.
+12. Captures per-episode `dumpsys meminfo` ground truth for Workload C and D under `ground_truth_*_meminfo.txt`.
+13. Invokes the analysis script to generate report-ready summaries, validation CSVs, and pseudo-request metrics.
 
 Workload definitions:
 
@@ -173,12 +181,23 @@ results/
   workload_b/
     run_01/
       ...
+      launch_ground_truth.csv
   workload_c/
     run_01/
       ...
+      ground_truth_page_load_gfxinfo.txt
+      ground_truth_swipe_1_gfxinfo.txt
+      ground_truth_swipe_2_gfxinfo.txt
+      ground_truth_swipe_3_gfxinfo.txt
+      ground_truth_page_load_meminfo.txt
+      ground_truth_swipe_1_meminfo.txt
+      ground_truth_swipe_2_meminfo.txt
+      ground_truth_swipe_3_meminfo.txt
   workload_d/
     run_01/
       ...
+      ground_truth_background_gfxinfo.txt
+      ground_truth_background_meminfo.txt
 ```
 
 Example using any local results directory:
@@ -196,7 +215,18 @@ This generates:
 - `comparison_ratios.csv`
 - `burst_summary.csv`
 - `pseudo_requests.csv`
+- `episode_summary.csv`
+- `launch_episode_summary.csv`
+- `launch_validation_summary.csv`
+- `launch_validation.csv`
+- `scroll_validation.csv`
+- `memory_validation.csv`
+- `launch_gap_sweep.csv`
+- `gap_sweep_validation.csv`
+- `scroll_gap_sweep.csv`
+- `memory_gap_sweep.csv`
 - `correlation_points.csv`
+- `figures/`
 - `report.md`
 
 ## Notes
@@ -208,8 +238,15 @@ This generates:
 - Workloads C and D use the same fixed Pexels URL so scrolling and post-home background activity come from one repeatable browser-content source.
 - The runner force-stops `com.android.settings`, `com.android.gallery3d`, and the configured browser packages before each run. It also clears browser app data before Workloads C and D so the content loads begin from a cold-cache state.
 - The runner writes sub-episode markers into the syscall trace for app launches, page loads, page-settle completion, swipe gestures, return-to-home, and background windows.
+- Workload B also records per-launch `am start -W` outputs, both as raw text files and as a parsed `launch_ground_truth.csv`, so launch episodes can be compared against burst-derived proxy metrics.
 - The runner resolves Task A/B/C binary paths relative to this repository by default. If your layout differs, override them with environment variables such as `TASKA_ATTACH`, `TASKA_MONITOR`, and `TASKA_RESET`.
-- Workload-tuning options include `--scroll-url`, `--page-settle-seconds`, `--swipe-pause-seconds`, and `--browser-clear-packages`. Equivalent environment variables are `SCROLL_URL` and `BROWSER_CLEAR_PACKAGES`.
+- Workload-tuning options include `--scroll-url`, `--page-settle-seconds`, `--swipe-pause-seconds`, `--browser-clear-packages`, and `--workload-c-gfxinfo-package`. Equivalent environment variables are `SCROLL_URL`, `BROWSER_CLEAR_PACKAGES`, and `WORKLOAD_C_GFXINFO_PACKAGE`.
+- Workload C now captures per-episode browser `gfxinfo` snapshots after page load and each swipe so scroll validation can use non-invasive frame/jank ground truth.
+- Workload C and D now also capture per-episode browser `meminfo` snapshots so the analysis can track memory pressure proxies against total PSS and swap PSS.
 - By default, raw generated outputs under `runs/` are best treated as local artifacts unless you intentionally want to publish selected summaries.
 - Android background services, charging state, and thermal drift can add noise, so repeated runs and spread-aware reporting are recommended.
 - The analysis pipeline makes conservative claims. It reports kernel-side cost signatures associated with activity episodes; it does not claim to measure exact user-perceived latency.
+
+## References
+
+[1]: M. Ibnath, M. Rezvani, and D. Wong, "eBeeMetrics: An eBPF-based Library Framework for Feedback-free Observability of QoS Metrics," in *Proceedings of the IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS)*, 2026. [Link](https://doi.org/10.48550/arXiv.2603.25067)
