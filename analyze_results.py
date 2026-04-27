@@ -457,40 +457,30 @@ def generate_report(aggregated, comparisons, gap_ms):
         )
     lines.append("")
 
-    lines.append("## Interpretation")
+    lines.append("## Collection Diagnostics")
     lines.append("")
-    if "workload_b" in aggregated and "workload_a" in aggregated:
-        burst_a = aggregated["workload_a"]["burst_metrics"]["throughput_bursts_per_s"]["mean"]
-        burst_b = aggregated["workload_b"]["burst_metrics"]["throughput_bursts_per_s"]["mean"]
+    lines.append("| Workload | Runs | Trace Events | Trace Elapsed (s) | Workload Elapsed (s) | Max Burst Latency (ms) |")
+    lines.append("| --- | ---: | ---: | ---: | ---: | ---: |")
+    for workload_name in present_workloads:
+        burst = aggregated[workload_name]["burst_metrics"]
         lines.append(
-            f"- Workload B vs A: app launch increases file syscall intensity from "
-            f"{number(aggregated['workload_a']['derived']['file_syscall_intensity']['mean'])} to "
-            f"{number(aggregated['workload_b']['derived']['file_syscall_intensity']['mean'])} and raises pseudo-request throughput from "
-            f"{number(burst_a)} to {number(burst_b)} bursts/s. "
-            "This is the Android analogue of eBeeMetrics inferring workload cost from syscall activity."
+            f"| {WORKLOAD_LABELS[workload_name]} | "
+            f"{aggregated[workload_name]['count']} | "
+            f"{number(burst['trace_event_count']['mean'])} | "
+            f"{number(burst['trace_elapsed_s']['mean'])} | "
+            f"{number(burst['workload_elapsed_s']['mean'])} | "
+            f"{number(burst['max_burst_latency_ms']['mean'])} |"
         )
-    if "workload_c" in aggregated and "workload_a" in aggregated:
-        lines.append(
-            f"- Workload C vs A: interaction remains clearly distinguishable from idle at both layers. "
-            f"It increases file intensity ({number(aggregated['workload_c']['derived']['file_syscall_intensity']['mean'])} vs "
-            f"{number(aggregated['workload_a']['derived']['file_syscall_intensity']['mean'])}) and yields a different burst profile "
-            f"({number(aggregated['workload_c']['burst_metrics']['avg_syscalls_per_burst']['mean'])} syscalls/burst vs "
-            f"{number(aggregated['workload_a']['burst_metrics']['avg_syscalls_per_burst']['mean'])})."
-        )
-    if "workload_d" in aggregated and "workload_a" in aggregated:
-        lines.append(
-            f"- Workload D vs A: background activity exposes hidden system work when the user is not actively interacting. "
-            f"If D remains measurably above A in burst throughput or file intensity, that supports the argument that Android background activity is observable and non-trivial."
-        )
-    if "workload_b" in aggregated and "workload_c" in aggregated:
-        lines.append(
-            f"- Workload B vs C: app launch and scrolling are not just larger or smaller versions of the same pattern. "
-            f"Launch shows higher allocation volume ({number(aggregated['workload_b']['derived']['allocation_volume']['mean'])} vs "
-            f"{number(aggregated['workload_c']['derived']['allocation_volume']['mean'])}), while the burst statistics reveal different pseudo-request structure."
-        )
-    lines.append(
-        "- These pseudo-requests are not HTTP requests. They are Android syscall bursts used as interaction proxies: syscall bursts stand in for request boundaries in the same spirit that eBeeMetrics uses syscall-visible events to recover request-level behavior."
-    )
+    lines.append("")
+
+    lines.append("## Artifact Guide")
+    lines.append("")
+    lines.append("- `raw_summary.csv`: averaged raw probe counters per workload")
+    lines.append("- `derived_metrics.csv`: normalized workload metrics computed from raw counters")
+    lines.append("- `burst_summary.csv`: burst-derived pseudo-request metrics and trace diagnostics")
+    lines.append("- `pseudo_requests.csv`: one row per reconstructed burst")
+    lines.append("- `comparison_ratios.csv`: workload-to-workload metric ratios")
+    lines.append("- `correlation_points.csv`: compact numeric export for downstream plotting and correlation analysis")
     if all(aggregated[name]["burst_metrics"]["burst_count"]["mean"] == 0 for name in present_workloads):
         lines.append(
             "- Note: this dataset does not include syscall-trace capture, so pseudo-request rows are empty. Re-run collection with the updated experiment harness to populate burst metrics."

@@ -108,32 +108,52 @@ Optional fixed brightness override:
 ./run_exploration_experiment.sh --output-dir ./runs --repetitions 5 --brightness 128
 ```
 
+Optional workload-tuning overrides:
+
+```bash
+./run_exploration_experiment.sh \
+  --output-dir ./runs \
+  --repetitions 5 \
+  --workload-b-browser-component org.chromium.webview_shell/.WebViewBrowserActivity \
+  --scroll-url https://www.pexels.com/search/nature/ \
+  --page-settle-seconds 5 \
+  --browser-clear-packages org.chromium.webview_shell,com.android.chrome
+```
+
 The runner:
 
 1. Pushes the existing attach/reset/monitor binaries to `/data/local/tmp/eBeeMobile` on the device.
 2. Starts the three attach processes on the device.
 3. Normalizes the device state before each run by waking the display, dismissing keyguard, setting a fixed manual brightness, force-stopping workload apps, and returning to the home screen.
-4. Repeats Workloads A, B, C, and D for the requested number of runs.
-5. Resets all maps before each run.
-6. Captures a timestamped syscall trace for each run using `raw_syscalls:sys_enter`.
-7. Captures monitor outputs into structured host-side directories.
-8. Invokes the analysis script to generate report-ready summaries and pseudo-request metrics.
+4. Clears browser app data before Workloads C and D so the browser-backed content workloads start from a cold-cache state.
+5. Repeats Workloads A, B, C, and D for the requested number of runs.
+6. Emits top-level and sub-episode trace markers so later analysis can isolate launches, page settling, swipes, and background windows.
+7. Resets all maps before each run.
+8. Captures a timestamped syscall trace for each run using `raw_syscalls:sys_enter`.
+9. Captures monitor outputs into structured host-side directories.
+10. Invokes the analysis script to generate report-ready summaries and pseudo-request metrics.
 
 Workload definitions:
 
 - Workload A: idle wait window
 - Workload B:
   - `am start -W -a android.settings.SETTINGS`
-  - `am start -W -a android.intent.action.VIEW -d https://www.google.com`
+  - `am start -W -n org.chromium.webview_shell/.WebViewBrowserActivity -d about:blank`
   - `am start -W -n com.android.gallery3d/com.android.gallery3d.app.Gallery`
   - `input keyevent KEYCODE_HOME`
 - Workload C:
-  - `am start -W -a android.intent.action.VIEW -d https://www.google.com`
+  - clear browser app data
+  - `am start -W -a android.intent.action.VIEW -d https://www.pexels.com/search/nature/`
+  - page-settle delay
   - `input swipe 500 1600 500 300 200`
+  - inter-swipe pause
   - `input swipe 500 1600 500 300 200`
+  - inter-swipe pause
   - `input swipe 500 300 500 1600 200`
 - Workload D:
-  - `am start -W -a android.intent.action.VIEW -d https://www.google.com`
+  - clear browser app data
+  - `am start -W -a android.intent.action.VIEW -d https://www.pexels.com/search/nature/`
+  - page-settle delay
   - `input keyevent KEYCODE_HOME`
   - sleep window for background activity
 
@@ -183,8 +203,13 @@ This generates:
 
 - The attach processes are designed to stay alive while measurements run. The host runner starts them once and then performs repeated reset / workload / monitor cycles.
 - The runner enforces a consistent screen-on, unlocked, fixed-brightness setup for all workloads.
-- The runner force-stops `com.android.settings`, `com.android.gallery3d`, and `org.chromium.webview_shell` before each run so Workload B behaves closer to a controlled cold-start experiment.
+- Workload B stays launch-focused by using `about:blank` for its browser step instead of a live web page.
+- Because `about:blank` may not resolve through a generic `VIEW` intent on all devices, Workload B uses a configurable explicit browser component via `--workload-b-browser-component` or `WORKLOAD_B_BROWSER_COMPONENT`.
+- Workloads C and D use the same fixed Pexels URL so scrolling and post-home background activity come from one repeatable browser-content source.
+- The runner force-stops `com.android.settings`, `com.android.gallery3d`, and the configured browser packages before each run. It also clears browser app data before Workloads C and D so the content loads begin from a cold-cache state.
+- The runner writes sub-episode markers into the syscall trace for app launches, page loads, page-settle completion, swipe gestures, return-to-home, and background windows.
 - The runner resolves Task A/B/C binary paths relative to this repository by default. If your layout differs, override them with environment variables such as `TASKA_ATTACH`, `TASKA_MONITOR`, and `TASKA_RESET`.
+- Workload-tuning options include `--scroll-url`, `--page-settle-seconds`, `--swipe-pause-seconds`, and `--browser-clear-packages`. Equivalent environment variables are `SCROLL_URL` and `BROWSER_CLEAR_PACKAGES`.
 - By default, raw generated outputs under `runs/` are best treated as local artifacts unless you intentionally want to publish selected summaries.
 - Android background services, charging state, and thermal drift can add noise, so repeated runs and spread-aware reporting are recommended.
 - The analysis pipeline makes conservative claims. It reports kernel-side cost signatures associated with activity episodes; it does not claim to measure exact user-perceived latency.

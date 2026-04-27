@@ -7,11 +7,17 @@ REPETITIONS=5
 IDLE_SECONDS=10
 BACKGROUND_SECONDS=20
 SETTLE_SECONDS=2
+PAGE_SETTLE_SECONDS=5
+SWIPE_PAUSE_SECONDS=1
 SCREEN_BRIGHTNESS=128
 DEVICE_DIR="/data/local/tmp/eBeeMobile"
 TRACEFS_DIR="/sys/kernel/tracing"
 BURST_GAP_MS=5
 TRACE_BUFFER_KB=65536
+WORKLOAD_B_BROWSER_URL="about:blank"
+WORKLOAD_B_BROWSER_COMPONENT="${WORKLOAD_B_BROWSER_COMPONENT:-org.chromium.webview_shell/.WebViewBrowserActivity}"
+SCROLL_URL="${SCROLL_URL:-https://www.pexels.com/search/nature/}"
+BROWSER_CLEAR_PACKAGES="${BROWSER_CLEAR_PACKAGES:-org.chromium.webview_shell,com.android.chrome,com.google.android.apps.chrome}"
 
 usage() {
   cat <<'EOF'
@@ -23,7 +29,12 @@ Options:
   --repetitions N      Number of repetitions per workload (default: 5)
   --idle-seconds N     Idle duration for Workload A (default: 10)
   --background-seconds N  Background duration for Workload D (default: 20)
+  --page-settle-seconds N  Post-page-load settle time for Workloads C/D (default: 5)
+  --swipe-pause-seconds N  Pause between swipe gestures in Workload C (default: 1)
   --brightness N       Manual screen brightness 0-255 (default: 128)
+  --workload-b-browser-component CMP  Explicit browser component for Workload B about:blank launch
+  --scroll-url URL     Scrollable URL for Workloads C/D (default: Pexels nature search)
+  --browser-clear-packages CSV  Comma-separated browser packages to clear before Workloads C/D
   --device-dir DIR     Device-side staging directory
   --help               Show this message
 EOF
@@ -47,8 +58,28 @@ while [[ $# -gt 0 ]]; do
       BACKGROUND_SECONDS="$2"
       shift 2
       ;;
+    --page-settle-seconds)
+      PAGE_SETTLE_SECONDS="$2"
+      shift 2
+      ;;
+    --swipe-pause-seconds)
+      SWIPE_PAUSE_SECONDS="$2"
+      shift 2
+      ;;
     --brightness)
       SCREEN_BRIGHTNESS="$2"
+      shift 2
+      ;;
+    --workload-b-browser-component)
+      WORKLOAD_B_BROWSER_COMPONENT="$2"
+      shift 2
+      ;;
+    --scroll-url)
+      SCROLL_URL="$2"
+      shift 2
+      ;;
+    --browser-clear-packages)
+      BROWSER_CLEAR_PACKAGES="$2"
       shift 2
       ;;
     --device-dir)
@@ -65,6 +96,18 @@ while [[ $# -gt 0 ]]; do
       exit 1
       ;;
   esac
+done
+
+trim_whitespace() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+IFS=',' read -r -a BROWSER_CLEAR_PACKAGES_ARR <<< "${BROWSER_CLEAR_PACKAGES}"
+for idx in "${!BROWSER_CLEAR_PACKAGES_ARR[@]}"; do
+  BROWSER_CLEAR_PACKAGES_ARR[$idx]="$(trim_whitespace "${BROWSER_CLEAR_PACKAGES_ARR[$idx]}")"
 done
 
 TASKA_ATTACH="${TASKA_ATTACH:-${ROOT_DIR}/taskA-file-stats/attach/libs/arm64-v8a/file_stats_attach}"
@@ -105,6 +148,11 @@ run_root_shell() {
 }
 
 run_device_shell() {
+  local cmd="$1"
+  run_adb shell "sh -c '$cmd'"
+}
+
+run_device_shell_capture() {
   local cmd="$1"
   run_adb shell "sh -c '$cmd'"
 }
@@ -181,9 +229,28 @@ reset_to_home() {
   sleep "${SETTLE_SECONDS}"
 }
 
-force_stop_workload_apps() {
-  for pkg in com.android.settings com.android.gallery3d org.chromium.webview_shell; do
+force_stop_browser_apps() {
+  local pkg
+  for pkg in "${BROWSER_CLEAR_PACKAGES_ARR[@]}"; do
+    [[ -z "${pkg}" ]] && continue
     run_device_shell "am force-stop ${pkg} >/dev/null 2>&1 || true"
+  done
+}
+
+force_stop_workload_apps() {
+  local pkg
+  for pkg in com.android.settings com.android.gallery3d; do
+    run_device_shell "am force-stop ${pkg} >/dev/null 2>&1 || true"
+  done
+  force_stop_browser_apps
+  sleep 1
+}
+
+clear_browser_app_data() {
+  local pkg
+  for pkg in "${BROWSER_CLEAR_PACKAGES_ARR[@]}"; do
+    [[ -z "${pkg}" ]] && continue
+    run_device_shell_capture "pm clear ${pkg} >/dev/null 2>&1 || true" >/dev/null
   done
   sleep 1
 }
@@ -193,6 +260,18 @@ normalize_device_state() {
   set_device_brightness
   force_stop_workload_apps
   reset_to_home
+}
+
+prepare_workload_state() {
+  local workload="$1"
+  case "$workload" in
+    workload_c|workload_d)
+      echo "Resetting browser state for ${workload}"
+      clear_browser_app_data
+      force_stop_browser_apps
+      reset_to_home
+      ;;
+  esac
 }
 
 prepare_syscall_trace() {
@@ -230,6 +309,13 @@ write_trace_marker() {
   run_root_shell "echo ${marker} > ${TRACEFS_DIR}/trace_marker"
 }
 
+write_substep_marker() {
+  local workload="$1"
+  local run="$2"
+  local marker="$3"
+  write_trace_marker "WORKLOAD_${workload}_RUN_${run}_${marker}"
+}
+
 write_run_metadata() {
   local outdir="$1"
   local workload_name="$2"
@@ -246,33 +332,67 @@ burst_gap_ms=${BURST_GAP_MS}
 EOF
 }
 
-workload_command() {
+run_marked_device_command() {
   local workload="$1"
+  local run="$2"
+  local marker_prefix="$3"
+  local cmd="$4"
+
+  write_substep_marker "$workload" "$run" "${marker_prefix}_START"
+  run_device_shell "$cmd"
+  write_substep_marker "$workload" "$run" "${marker_prefix}_END"
+}
+
+run_workload() {
+  local workload="$1"
+  local run="$2"
   case "$workload" in
     workload_a)
-      printf "input keyevent KEYCODE_HOME; sleep %s" "$IDLE_SECONDS"
+      run_device_shell "input keyevent KEYCODE_HOME; sleep ${IDLE_SECONDS}"
       ;;
     workload_b)
-      printf "am start -W -a android.settings.SETTINGS; sleep %s; am start -W -a android.intent.action.VIEW -d https://www.google.com; sleep %s; am start -W -n com.android.gallery3d/com.android.gallery3d.app.Gallery; sleep %s; input keyevent KEYCODE_HOME" "$SETTLE_SECONDS" "$SETTLE_SECONDS" "$SETTLE_SECONDS"
+      run_marked_device_command "$workload" "$run" "SETTINGS_LAUNCH" \
+        "am start -W -a android.settings.SETTINGS"
+      sleep "${SETTLE_SECONDS}"
+      run_marked_device_command "$workload" "$run" "BROWSER_LAUNCH" \
+        "am start -W -n ${WORKLOAD_B_BROWSER_COMPONENT} -d ${WORKLOAD_B_BROWSER_URL}"
+      sleep "${SETTLE_SECONDS}"
+      run_marked_device_command "$workload" "$run" "GALLERY_LAUNCH" \
+        "am start -W -n com.android.gallery3d/com.android.gallery3d.app.Gallery"
+      sleep "${SETTLE_SECONDS}"
+      run_marked_device_command "$workload" "$run" "RETURN_HOME" \
+        "input keyevent KEYCODE_HOME"
       ;;
     workload_c)
-      printf "am start -W -a android.intent.action.VIEW -d https://www.google.com; sleep %s; input swipe 500 1600 500 300 200; sleep 1; input swipe 500 1600 500 300 200; sleep 1; input swipe 500 300 500 1600 200" "$SETTLE_SECONDS"
+      run_marked_device_command "$workload" "$run" "PAGE_LOAD" \
+        "am start -W -a android.intent.action.VIEW -d ${SCROLL_URL}"
+      sleep "${PAGE_SETTLE_SECONDS}"
+      write_substep_marker "$workload" "$run" "PAGE_SETTLED"
+      run_marked_device_command "$workload" "$run" "SWIPE_1" \
+        "input swipe 500 1600 500 300 200"
+      sleep "${SWIPE_PAUSE_SECONDS}"
+      run_marked_device_command "$workload" "$run" "SWIPE_2" \
+        "input swipe 500 1600 500 300 200"
+      sleep "${SWIPE_PAUSE_SECONDS}"
+      run_marked_device_command "$workload" "$run" "SWIPE_3" \
+        "input swipe 500 300 500 1600 200"
       ;;
     workload_d)
-      printf "am start -W -a android.intent.action.VIEW -d https://www.google.com; sleep %s; input keyevent KEYCODE_HOME; sleep %s" "$SETTLE_SECONDS" "$BACKGROUND_SECONDS"
+      run_marked_device_command "$workload" "$run" "PAGE_LOAD" \
+        "am start -W -a android.intent.action.VIEW -d ${SCROLL_URL}"
+      sleep "${PAGE_SETTLE_SECONDS}"
+      write_substep_marker "$workload" "$run" "PAGE_SETTLED"
+      run_marked_device_command "$workload" "$run" "RETURN_HOME" \
+        "input keyevent KEYCODE_HOME"
+      write_substep_marker "$workload" "$run" "BACKGROUND_WINDOW_START"
+      sleep "${BACKGROUND_SECONDS}"
+      write_substep_marker "$workload" "$run" "BACKGROUND_WINDOW_END"
       ;;
     *)
       echo "Unknown workload: $workload" >&2
       exit 1
       ;;
   esac
-}
-
-run_workload() {
-  local workload="$1"
-  local cmd
-  cmd="$(workload_command "$workload")"
-  run_device_shell "$cmd"
 }
 
 mkdir -p "$OUTPUT_DIR"
@@ -309,12 +429,13 @@ for workload in workload_a workload_b workload_c workload_d; do
 
     echo "Collecting ${workload} run $(printf '%02d' "$run")"
     normalize_device_state
+    prepare_workload_state "$workload"
     reset_maps
     sleep 1
     start_syscall_trace_capture
     start_ts="$(date +%s.%N)"
     write_trace_marker "WORKLOAD_${workload}_RUN_${run}_START"
-    run_workload "$workload"
+    run_workload "$workload" "$run"
     write_trace_marker "WORKLOAD_${workload}_RUN_${run}_END"
     sleep "${SETTLE_SECONDS}"
     end_ts="$(date +%s.%N)"
