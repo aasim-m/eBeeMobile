@@ -229,6 +229,62 @@ This generates:
 - `figures/`
 - `report.md`
 
+## Validation
+
+The analysis pipeline has two roles:
+
+- summarize each workload using a default burst gap
+- validate burst-derived proxy metrics against independently collected ground truth
+
+By default, the summary tables in `report.md` use the configured `--burst-gap-ms` value. The validation sections also sweep `1, 2, 5, 10, 20, 50 ms` burst gaps and report which gap best fits each target metric.
+
+Ground-truth sources:
+
+- Launch validation uses `am start -W` output captured in `launch_ground_truth.csv`.
+- Scroll validation uses `dumpsys gfxinfo` snapshots captured in `ground_truth_*_gfxinfo.txt`.
+- Memory validation uses `dumpsys meminfo` snapshots captured in `ground_truth_*_meminfo.txt`.
+
+Primary validation targets:
+
+- `ground_truth_total_time_ms`: Android `am start -W` `TotalTime`, the end-to-end app launch duration reported by ActivityManager.
+- `ground_truth_wait_time_ms`: Android `am start -W` `WaitTime`, the broader launch wait duration including system-side waiting around the start request.
+- `ground_truth_total_frames_rendered`: total frames rendered during the captured `gfxinfo` episode.
+- `ground_truth_janky_frames`: raw janky-frame count from `dumpsys gfxinfo`.
+- `ground_truth_janky_frames_pct`: percentage of rendered frames flagged as janky by `dumpsys gfxinfo`.
+- `ground_truth_frame_p50_ms`: median frame duration from `dumpsys gfxinfo`.
+- `ground_truth_frame_p90_ms`: 90th-percentile frame duration from `dumpsys gfxinfo`.
+- `ground_truth_frame_p95_ms`: 95th-percentile frame duration from `dumpsys gfxinfo`, used as a rendering tail-latency target.
+- `ground_truth_frame_p99_ms`: 99th-percentile frame duration from `dumpsys gfxinfo`.
+- `ground_truth_total_pss_kb`: total proportional set size from `dumpsys meminfo`, used as a coarse memory-footprint target.
+- `ground_truth_total_swap_pss_kb`: total swap-backed proportional set size from `dumpsys meminfo`, used when swap activity is present.
+- `ground_truth_graphics_pss_kb`: graphics-related proportional set size from `dumpsys meminfo`, used as a GPU/UI-memory target.
+- `ground_truth_native_heap_pss_kb`: native-heap proportional set size from `dumpsys meminfo`.
+- `ground_truth_dalvik_heap_pss_kb`: Dalvik-heap proportional set size from `dumpsys meminfo`.
+
+Additional ground-truth fields exported into episode CSVs:
+
+- Launch: `ground_truth_status`, `ground_truth_launch_state`, `ground_truth_activity`, `ground_truth_this_time_ms`, `ground_truth_error`.
+- Scroll / gfxinfo: `ground_truth_janky_frames`, `ground_truth_frame_p50_ms`, `ground_truth_frame_p90_ms`, `ground_truth_frame_p99_ms`, `ground_truth_missed_vsync`, `ground_truth_high_input_latency`, `ground_truth_slow_ui_thread`, `ground_truth_slow_bitmap_uploads`, `ground_truth_slow_issue_draw_commands`, `ground_truth_frame_deadline_missed`, `ground_truth_total_viewrootimpl`, `ground_truth_total_attached_views`, `ground_truth_total_rendernode_kb`.
+- Memory / meminfo: `ground_truth_native_heap_pss_kb`, `ground_truth_dalvik_heap_pss_kb`, `ground_truth_system_pss_kb`, `ground_truth_total_rss_kb`, `ground_truth_views`, `ground_truth_activities`, `ground_truth_webviews`.
+
+How to read the validation tables:
+
+- `Pearson r` measures linear correlation between a proxy metric and the ground-truth target.
+- `Spearman r` measures rank-order agreement, which is useful when the relationship is monotonic but not perfectly linear.
+- `MAE` and `RMSE` report regression error after fitting a line from proxy to target.
+- `Diagnostic` appears in validation sweep CSVs and marks whether a row is usable: `ok`, `constant_target`, `constant_proxy`, or `insufficient_samples`.
+- Lower is better for launch times, frame times, jank percentage, and memory-footprint targets.
+- Higher is generally better for `ground_truth_total_frames_rendered`, because it means more rendering work completed during the episode window.
+- The generated report now includes per-family recommendation summaries that show the best gap and best proxy for each target.
+
+Why different burst gaps win for different targets:
+
+- Larger gaps merge nearby syscall clusters into broader bursts, which can better match coarse events like full app launch.
+- Smaller gaps preserve finer structure, which can better match frame-level or gesture-level behavior during scrolling.
+- Some proxies are highly gap-sensitive, such as burst latency, burst count, throughput, and syscalls per burst.
+- Some proxies are mostly gap-invariant, such as trace event count or workload-level memory counters, so multiple gaps may tie or behave similarly.
+- If a target is constant or missing across the dataset, the report omits that validation target instead of printing misleading zero-correlation rows.
+
 ## Notes
 
 - The attach processes are designed to stay alive while measurements run. The host runner starts them once and then performs repeated reset / workload / monitor cycles.
