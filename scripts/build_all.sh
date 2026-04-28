@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 NDK_ROOT="${NDK:-${ANDROID_NDK_HOME:-}}"
 DEPS_ROOT="${DEPS:-${ANDROID_EBPF_DEPS:-}}"
 
@@ -39,8 +40,8 @@ build_task() {
   )
 }
 
-build_task "${ROOT_DIR}/taskA-file-stats"
-build_task "${ROOT_DIR}/taskB-page-order"
-build_task "${ROOT_DIR}/taskC-alloc-latency"
+build_task "${ROOT_DIR}/file-stats"
+build_task "${ROOT_DIR}/page-order"
+build_task "${ROOT_DIR}/alloc-latency"
 
 echo "Build complete."

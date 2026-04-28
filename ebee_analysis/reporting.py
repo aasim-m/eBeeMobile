@@ -48,7 +48,7 @@ def generate_report(aggregated, comparisons, gap_ms, validation_gaps):
     lines.append("")
     lines.append(
         "This report summarizes two layers of observability from the Android experiment suite. "
-        "First, it reports workload-level kernel-visible I/O and memory behavior using the existing Task A/B/C eBPF probes. "
+        "First, it reports workload-level kernel-visible I/O and memory behavior using the existing file-stats, page-order, and alloc-latency eBPF probes. "
         "Second, it derives pseudo-request metrics by segmenting timestamped syscall events into bursts, following the same high-level idea as eBeeMetrics: infer latency-like and throughput-like metrics from low-level syscall observability."
     )
     lines.append("")
@@ -172,4 +172,3 @@ def generate_report(aggregated, comparisons, gap_ms, validation_gaps):
     lines.append("")
 
     return "\n".join(lines)
-

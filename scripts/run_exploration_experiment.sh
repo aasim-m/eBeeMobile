@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 OUTPUT_DIR="${ROOT_DIR}/runs/$(date +%Y%m%d_%H%M%S)"
 REPETITIONS=5
 IDLE_SECONDS=10
@@ -116,17 +117,17 @@ for idx in "${!BROWSER_CLEAR_PACKAGES_ARR[@]}"; do
   BROWSER_CLEAR_PACKAGES_ARR[$idx]="$(trim_whitespace "${BROWSER_CLEAR_PACKAGES_ARR[$idx]}")"
 done
 
-TASKA_ATTACH="${TASKA_ATTACH:-${ROOT_DIR}/taskA-file-stats/attach/libs/arm64-v8a/file_stats_attach}"
-TASKA_MONITOR="${TASKA_MONITOR:-${ROOT_DIR}/taskA-file-stats/monitor/libs/arm64-v8a/file_stats_monitor}"
-TASKA_RESET="${TASKA_RESET:-${ROOT_DIR}/taskA-file-stats/monitor/libs/arm64-v8a/file_stats_reset}"
+TASKA_ATTACH="${TASKA_ATTACH:-${ROOT_DIR}/file-stats/attach/libs/arm64-v8a/file_stats_attach}"
+TASKA_MONITOR="${TASKA_MONITOR:-${ROOT_DIR}/file-stats/monitor/libs/arm64-v8a/file_stats_monitor}"
+TASKA_RESET="${TASKA_RESET:-${ROOT_DIR}/file-stats/monitor/libs/arm64-v8a/file_stats_reset}"
 
-TASKB_ATTACH="${TASKB_ATTACH:-${ROOT_DIR}/taskB-page-order/attach/libs/arm64-v8a/page_order_attach}"
-TASKB_MONITOR="${TASKB_MONITOR:-${ROOT_DIR}/taskB-page-order/monitor/libs/arm64-v8a/page_order_monitor}"
-TASKB_RESET="${TASKB_RESET:-${ROOT_DIR}/taskB-page-order/monitor/libs/arm64-v8a/page_order_reset}"
+TASKB_ATTACH="${TASKB_ATTACH:-${ROOT_DIR}/page-order/attach/libs/arm64-v8a/page_order_attach}"
+TASKB_MONITOR="${TASKB_MONITOR:-${ROOT_DIR}/page-order/monitor/libs/arm64-v8a/page_order_monitor}"
+TASKB_RESET="${TASKB_RESET:-${ROOT_DIR}/page-order/monitor/libs/arm64-v8a/page_order_reset}"
 
-TASKC_ATTACH="${TASKC_ATTACH:-${ROOT_DIR}/taskC-alloc-latency/attach/libs/arm64-v8a/alloc_latency_attach}"
-TASKC_MONITOR="${TASKC_MONITOR:-${ROOT_DIR}/taskC-alloc-latency/monitor/libs/arm64-v8a/alloc_latency_monitor}"
-TASKC_RESET="${TASKC_RESET:-${ROOT_DIR}/taskC-alloc-latency/monitor/libs/arm64-v8a/alloc_latency_reset}"
+TASKC_ATTACH="${TASKC_ATTACH:-${ROOT_DIR}/alloc-latency/attach/libs/arm64-v8a/alloc_latency_attach}"
+TASKC_MONITOR="${TASKC_MONITOR:-${ROOT_DIR}/alloc-latency/monitor/libs/arm64-v8a/alloc_latency_monitor}"
+TASKC_RESET="${TASKC_RESET:-${ROOT_DIR}/alloc-latency/monitor/libs/arm64-v8a/alloc_latency_reset}"
 
 require_host_file() {
   local path="$1"
@@ -514,9 +515,9 @@ push_binary "$TASKC_MONITOR" "${DEVICE_DIR}/alloc_latency_monitor"
 push_binary "$TASKC_RESET" "${DEVICE_DIR}/alloc_latency_reset"
 
 echo "Starting attachers..."
-start_attach "Task A" "${DEVICE_DIR}/file_stats_attach"
-start_attach "Task B" "${DEVICE_DIR}/page_order_attach"
-start_attach "Task C" "${DEVICE_DIR}/alloc_latency_attach"
+start_attach "file-stats" "${DEVICE_DIR}/file_stats_attach"
+start_attach "page-order" "${DEVICE_DIR}/page_order_attach"
+start_attach "alloc-latency" "${DEVICE_DIR}/alloc_latency_attach"
 
 for workload in workload_a workload_b workload_c workload_d; do
   for run in $(seq 1 "$REPETITIONS"); do
@@ -549,7 +550,7 @@ PY
 done
 
 echo "Analyzing results..."
-python3 "${ROOT_DIR}/analyze_results.py" "$OUTPUT_DIR" --output-dir "$OUTPUT_DIR" --burst-gap-ms "$BURST_GAP_MS"
+python3 "${ROOT_DIR}/scripts/analyze_results.py" "$OUTPUT_DIR" --output-dir "$OUTPUT_DIR" --burst-gap-ms "$BURST_GAP_MS"
 
 echo "Experiment complete."
 echo "Results directory: ${OUTPUT_DIR}"

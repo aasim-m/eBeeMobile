@@ -47,12 +47,13 @@ The project uses the following mapping from eBeeMetrics to Android:
 
 ## Repository Layout
 
-- `taskA-file-stats/`: Task A eBPF program, attach tool, and monitor/reset binaries for file-operation statistics
-- `taskB-page-order/`: Task B eBPF program, attach tool, and monitor/reset binaries for page-allocation order
-- `taskC-alloc-latency/`: Task C eBPF program, attach tool, and monitor/reset binaries for allocation-latency histograms
-- [run_exploration_experiment.sh](run_exploration_experiment.sh): experiment runner for repeated Android workloads and trace capture
-- [analyze_results.py](analyze_results.py): burst segmentation and report generation
-- [build_all.sh](build_all.sh): rebuilds the eBPF objects and Android user-space binaries
+- `file-stats/`: eBPF program, attach tool, and monitor/reset binaries for file-operation statistics
+- `page-order/`: eBPF program, attach tool, and monitor/reset binaries for page-allocation order
+- `alloc-latency/`: eBPF program, attach tool, and monitor/reset binaries for allocation-latency histograms
+- `scripts/`: helper entrypoints for experiment execution, report generation, and rebuilding
+- [scripts/run_exploration_experiment.sh](scripts/run_exploration_experiment.sh): experiment runner for repeated Android workloads and trace capture
+- [scripts/analyze_results.py](scripts/analyze_results.py): burst segmentation and report generation
+- [scripts/build_all.sh](scripts/build_all.sh): rebuilds the eBPF objects and Android user-space binaries
 - `runs/`: generated experiment outputs, optional to version
 
 ## Derived Metrics
@@ -81,7 +82,7 @@ It also computes eBeeMetrics-style pseudo-request metrics by grouping timestampe
 - `adb` installed on the host
 - a connected and authorized Android device
 - `su` available on the device
-- the bundled Task A, Task B, and Task C binaries present under this repository
+- the bundled `file-stats`, `page-order`, and `alloc-latency` binaries present under this repository
 - Android NDK installed if you want to rebuild the bundled binaries
 - the Android eBPF dependency tree available if you want to rebuild the `.o` eBPF objects
 
@@ -92,7 +93,7 @@ Rebuild all eBPF objects and Android user-space binaries:
 ```bash
 export ANDROID_NDK_HOME=/path/to/android-ndk
 export ANDROID_EBPF_DEPS=/path/to/android-ebpf-deps
-./build_all.sh
+./scripts/build_all.sh
 ```
 
 The bundled binaries under `attach/libs/arm64-v8a/` and `monitor/libs/arm64-v8a/` are device-side executables for `arm64-v8a`.
@@ -103,19 +104,19 @@ Example:
 
 ```bash
 cd eBeeMobile
-./run_exploration_experiment.sh --output-dir ./runs --repetitions 5
+./scripts/run_exploration_experiment.sh --output-dir ./runs --repetitions 5
 ```
 
 Optional fixed brightness override:
 
 ```bash
-./run_exploration_experiment.sh --output-dir ./runs --repetitions 5 --brightness 128
+./scripts/run_exploration_experiment.sh --output-dir ./runs --repetitions 5 --brightness 128
 ```
 
 Optional workload-tuning overrides:
 
 ```bash
-./run_exploration_experiment.sh \
+./scripts/run_exploration_experiment.sh \
   --output-dir ./runs \
   --repetitions 5 \
   --workload-b-browser-component org.chromium.webview_shell/.WebViewBrowserActivity \
@@ -203,7 +204,7 @@ results/
 Example using any local results directory:
 
 ```bash
-python3 analyze_results.py \
+python3 scripts/analyze_results.py \
   runs/final_burst \
   --output-dir /tmp/android-ebpf-analysis
 ```
@@ -295,7 +296,7 @@ Why different burst gaps win for different targets:
 - The runner force-stops `com.android.settings`, `com.android.gallery3d`, and the configured browser packages before each run. It also clears browser app data before Workloads C and D so the content loads begin from a cold-cache state.
 - The runner writes sub-episode markers into the syscall trace for app launches, page loads, page-settle completion, swipe gestures, return-to-home, and background windows.
 - Workload B also records per-launch `am start -W` outputs, both as raw text files and as a parsed `launch_ground_truth.csv`, so launch episodes can be compared against burst-derived proxy metrics.
-- The runner resolves Task A/B/C binary paths relative to this repository by default. If your layout differs, override them with environment variables such as `TASKA_ATTACH`, `TASKA_MONITOR`, and `TASKA_RESET`.
+- The runner resolves `file-stats`, `page-order`, and `alloc-latency` binary paths relative to this repository by default. If your layout differs, override them with environment variables such as `TASKA_ATTACH`, `TASKA_MONITOR`, and `TASKA_RESET`.
 - Workload-tuning options include `--scroll-url`, `--page-settle-seconds`, `--swipe-pause-seconds`, `--browser-clear-packages`, and `--workload-c-gfxinfo-package`. Equivalent environment variables are `SCROLL_URL`, `BROWSER_CLEAR_PACKAGES`, and `WORKLOAD_C_GFXINFO_PACKAGE`.
 - Workload C now captures per-episode browser `gfxinfo` snapshots after page load and each swipe so scroll validation can use non-invasive frame/jank ground truth.
 - Workload C and D now also capture per-episode browser `meminfo` snapshots so the analysis can track memory pressure proxies against total PSS and swap PSS.
