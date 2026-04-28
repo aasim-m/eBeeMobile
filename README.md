@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/eBeeMobile.svg" alt="eBeeMobile" />
+  <img src="assets/eBeeMobile_ondark.svg" alt="eBeeMobile" />
 </p>
 
 # eBeeMobile
