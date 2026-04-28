@@ -8,7 +8,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from ebee_analysis.parsing import load_launch_ground_truth, parse_gfxinfo, parse_meminfo
+from ebee_analysis.parsing import (
+    load_gfxinfo_ground_truth,
+    load_launch_ground_truth,
+    parse_gfxinfo,
+    parse_meminfo,
+)
 
 
 class ParsingTests(unittest.TestCase):
@@ -110,6 +115,28 @@ class ParsingTests(unittest.TestCase):
 
         self.assertIn("settings_launch", rows)
         self.assertEqual(rows["settings_launch"]["total_time_ms"], "180")
+
+    def test_load_gfxinfo_ground_truth_includes_workload_d_background_window(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            run_dir = Path(tmpdir)
+            (run_dir / "ground_truth_background_gfxinfo.txt").write_text(
+                "\n".join(
+                    [
+                        "Total frames rendered: 12",
+                        "Janky frames: 1 (8.33%)",
+                        "50th percentile: 8ms",
+                        "90th percentile: 15ms",
+                        "95th percentile: 18ms",
+                        "99th percentile: 20ms",
+                    ]
+                )
+            )
+
+            rows = load_gfxinfo_ground_truth(run_dir)
+
+        self.assertIn("background_window", rows)
+        self.assertEqual(rows["background_window"]["total_frames_rendered"], 12)
+        self.assertEqual(rows["background_window"]["frame_p95_ms"], 18.0)
 
 
 if __name__ == "__main__":

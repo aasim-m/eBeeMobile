@@ -138,7 +138,7 @@ The runner:
 8. Captures a timestamped syscall trace for each run using `raw_syscalls:sys_enter`.
 9. Captures monitor outputs into structured host-side directories.
 10. Captures per-launch `am start -W` ground truth for Workload B under `launch_ground_truth.csv`.
-11. Captures per-episode `dumpsys gfxinfo` ground truth for Workload C under `ground_truth_*_gfxinfo.txt`.
+11. Captures per-episode `dumpsys gfxinfo` ground truth for Workload C and the background window of Workload D under `ground_truth_*_gfxinfo.txt`.
 12. Captures per-episode `dumpsys meminfo` ground truth for Workload C and D under `ground_truth_*_meminfo.txt`.
 13. Invokes the analysis script to generate report-ready summaries, validation CSVs, and pseudo-request metrics.
 

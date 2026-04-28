@@ -7,6 +7,7 @@ from .constants import (
     TIMESTAMP_RE,
     WORKLOAD_C_GFXINFO_FILES,
     WORKLOAD_C_MEMINFO_FILES,
+    WORKLOAD_D_GFXINFO_FILES,
     WORKLOAD_D_MEMINFO_FILES,
 )
 from .stats import ratio
@@ -116,6 +117,10 @@ def load_launch_ground_truth(path):
 def load_gfxinfo_ground_truth(run_dir):
     ground_truth = {}
     for episode, filename in WORKLOAD_C_GFXINFO_FILES.items():
+        path = run_dir / filename
+        if path.exists():
+            ground_truth[episode] = parse_gfxinfo(path)
+    for episode, filename in WORKLOAD_D_GFXINFO_FILES.items():
         path = run_dir / filename
         if path.exists():
             ground_truth[episode] = parse_gfxinfo(path)

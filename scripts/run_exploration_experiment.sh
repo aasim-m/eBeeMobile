@@ -112,6 +112,12 @@ trim_whitespace() {
   printf '%s' "$value"
 }
 
+shell_quote() {
+  local value="$1"
+  value="${value//\'/\'\\\'\'}"
+  printf "'%s'" "$value"
+}
+
 IFS=',' read -r -a BROWSER_CLEAR_PACKAGES_ARR <<< "${BROWSER_CLEAR_PACKAGES}"
 for idx in "${!BROWSER_CLEAR_PACKAGES_ARR[@]}"; do
   BROWSER_CLEAR_PACKAGES_ARR[$idx]="$(trim_whitespace "${BROWSER_CLEAR_PACKAGES_ARR[$idx]}")"
@@ -156,12 +162,14 @@ run_root_shell() {
 
 run_device_shell() {
   local cmd="$1"
-  run_adb shell "sh -c '$cmd'"
+  local escaped_cmd=${cmd//\'/\'\\\'\'}
+  run_adb shell "sh -c '$escaped_cmd'"
 }
 
 run_device_shell_capture() {
   local cmd="$1"
-  run_adb shell "sh -c '$cmd'"
+  local escaped_cmd=${cmd//\'/\'\\\'\'}
+  run_adb shell "sh -c '$escaped_cmd'"
 }
 
 push_binary() {
@@ -240,7 +248,7 @@ force_stop_browser_apps() {
   local pkg
   for pkg in "${BROWSER_CLEAR_PACKAGES_ARR[@]}"; do
     [[ -z "${pkg}" ]] && continue
-    run_device_shell "am force-stop ${pkg} >/dev/null 2>&1 || true"
+    run_device_shell "am force-stop $(shell_quote "${pkg}") >/dev/null 2>&1 || true"
   done
 }
 
@@ -257,23 +265,23 @@ clear_browser_app_data() {
   local pkg
   for pkg in "${BROWSER_CLEAR_PACKAGES_ARR[@]}"; do
     [[ -z "${pkg}" ]] && continue
-    run_device_shell_capture "pm clear ${pkg} >/dev/null 2>&1 || true" >/dev/null
+    run_device_shell_capture "pm clear $(shell_quote "${pkg}") >/dev/null 2>&1 || true" >/dev/null
   done
   sleep 1
 }
 
 reset_browser_gfxinfo() {
-  run_device_shell "dumpsys gfxinfo ${WORKLOAD_C_GFXINFO_PACKAGE} reset >/dev/null 2>&1 || true"
+  run_device_shell "dumpsys gfxinfo $(shell_quote "${WORKLOAD_C_GFXINFO_PACKAGE}") reset >/dev/null 2>&1 || true"
 }
 
 capture_browser_gfxinfo() {
   local outfile="$1"
-  run_device_shell_capture "dumpsys gfxinfo ${WORKLOAD_C_GFXINFO_PACKAGE}" > "$outfile"
+  run_device_shell_capture "dumpsys gfxinfo $(shell_quote "${WORKLOAD_C_GFXINFO_PACKAGE}")" > "$outfile"
 }
 
 capture_browser_meminfo() {
   local outfile="$1"
-  run_device_shell_capture "dumpsys meminfo ${WORKLOAD_C_GFXINFO_PACKAGE}" > "$outfile"
+  run_device_shell_capture "dumpsys meminfo $(shell_quote "${WORKLOAD_C_GFXINFO_PACKAGE}")" > "$outfile"
 }
 
 normalize_device_state() {
@@ -431,7 +439,7 @@ run_workload() {
       append_launch_ground_truth_csv "${run_dir}/launch_ground_truth.csv" "settings_launch" "$launch_output"
       sleep "${SETTLE_SECONDS}"
       launch_output="$(run_marked_device_command_capture "$workload" "$run" "BROWSER_LAUNCH" \
-        "am start -W -n ${WORKLOAD_B_BROWSER_COMPONENT} -d ${WORKLOAD_B_BROWSER_URL}" \
+        "am start -W -n $(shell_quote "${WORKLOAD_B_BROWSER_COMPONENT}") -d $(shell_quote "${WORKLOAD_B_BROWSER_URL}")" \
         "${run_dir}/ground_truth_browser_launch.txt")"
       append_launch_ground_truth_csv "${run_dir}/launch_ground_truth.csv" "browser_launch" "$launch_output"
       sleep "${SETTLE_SECONDS}"
@@ -445,7 +453,7 @@ run_workload() {
       ;;
     workload_c)
       run_marked_device_command "$workload" "$run" "PAGE_LOAD" \
-        "am start -W -a android.intent.action.VIEW -d ${SCROLL_URL}"
+        "am start -W -a android.intent.action.VIEW -d $(shell_quote "${SCROLL_URL}")"
       sleep "${PAGE_SETTLE_SECONDS}"
       write_substep_marker "$workload" "$run" "PAGE_SETTLED"
       capture_browser_gfxinfo "${run_dir}/ground_truth_page_load_gfxinfo.txt"
@@ -471,11 +479,9 @@ run_workload() {
       ;;
     workload_d)
       run_marked_device_command "$workload" "$run" "PAGE_LOAD" \
-        "am start -W -a android.intent.action.VIEW -d ${SCROLL_URL}"
+        "am start -W -a android.intent.action.VIEW -d $(shell_quote "${SCROLL_URL}")"
       sleep "${PAGE_SETTLE_SECONDS}"
       write_substep_marker "$workload" "$run" "PAGE_SETTLED"
-      capture_browser_gfxinfo "${run_dir}/ground_truth_page_load_gfxinfo.txt"
-      capture_browser_meminfo "${run_dir}/ground_truth_page_load_meminfo.txt"
       reset_browser_gfxinfo
       run_marked_device_command "$workload" "$run" "RETURN_HOME" \
         "input keyevent KEYCODE_HOME"
