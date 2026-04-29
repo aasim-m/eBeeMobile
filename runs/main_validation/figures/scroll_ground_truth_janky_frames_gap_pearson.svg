@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="440" viewBox="0 0 760 440">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="380.0" y="28" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="700">Scroll Ground truth janky frames correlation by burst gap</text>
+<line x1="76" y1="52" x2="76" y2="370" stroke="#111827" stroke-width="1"/>
+<line x1="76" y1="370" x2="592" y2="370" stroke="#111827" stroke-width="1"/>
+<line x1="76" y1="211.00" x2="592" y2="211.00" stroke="#9ca3af" stroke-width="1.2" stroke-dasharray="4 4"/>
+<line x1="76.00" y1="52" x2="76.00" y2="370" stroke="#e5e7eb" stroke-width="1"/>
+<text x="76.00" y="392" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">0</text>
+<line x1="179.20" y1="52" x2="179.20" y2="370" stroke="#e5e7eb" stroke-width="1"/>
+<text x="179.20" y="392" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">10</text>
+<line x1="282.40" y1="52" x2="282.40" y2="370" stroke="#e5e7eb" stroke-width="1"/>
+<text x="282.40" y="392" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">20</text>
+<line x1="385.60" y1="52" x2="385.60" y2="370" stroke="#e5e7eb" stroke-width="1"/>
+<text x="385.60" y="392" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">31</text>
+<line x1="488.80" y1="52" x2="488.80" y2="370" stroke="#e5e7eb" stroke-width="1"/>
+<text x="488.80" y="392" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">41</text>
+<line x1="592.00" y1="52" x2="592.00" y2="370" stroke="#e5e7eb" stroke-width="1"/>
+<text x="592.00" y="392" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">51</text>
+<line x1="76" y1="370.00" x2="592" y2="370.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="66" y="374.00" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">-1.0</text>
+<line x1="76" y1="290.50" x2="592" y2="290.50" stroke="#e5e7eb" stroke-width="1"/>
+<text x="66" y="294.50" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">-0.5</text>
+<line x1="76" y1="211.00" x2="592" y2="211.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="66" y="215.00" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">0.0</text>
+<line x1="76" y1="131.50" x2="592" y2="131.50" stroke="#e5e7eb" stroke-width="1"/>
+<text x="66" y="135.50" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">0.5</text>
+<line x1="76" y1="52.00" x2="592" y2="52.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="66" y="56.00" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">1.0</text>
+<polyline points="85.92,119.34 96.05,187.54 126.43,212.58 177.05,232.85 278.31,334.88 582.08,130.89" fill="none" stroke="#2563eb" stroke-width="2.4"/>
+<circle cx="85.92" cy="119.34" r="3.5" fill="#2563eb"/>
+<circle cx="96.05" cy="187.54" r="3.5" fill="#2563eb"/>
+<circle cx="126.43" cy="212.58" r="3.5" fill="#2563eb"/>
+<circle cx="177.05" cy="232.85" r="3.5" fill="#2563eb"/>
+<circle cx="278.31" cy="334.88" r="3.5" fill="#2563eb"/>
+<circle cx="582.08" cy="130.89" r="3.5" fill="#2563eb"/>
+<line x1="614" y1="70" x2="632" y2="70" stroke="#2563eb" stroke-width="2.4"/>
+<text x="638" y="74" font-family="sans-serif" font-size="11" fill="#374151">avg_burst_latency_ms</text>
+<polyline points="85.92,101.76 96.05,163.42 126.43,235.82 177.05,252.83 278.31,305.36 582.08,84.54" fill="none" stroke="#dc2626" stroke-width="2.4"/>
+<circle cx="85.92" cy="101.76" r="3.5" fill="#dc2626"/>
+<circle cx="96.05" cy="163.42" r="3.5" fill="#dc2626"/>
+<circle cx="126.43" cy="235.82" r="3.5" fill="#dc2626"/>
+<circle cx="177.05" cy="252.83" r="3.5" fill="#dc2626"/>
+<circle cx="278.31" cy="305.36" r="3.5" fill="#dc2626"/>
+<circle cx="582.08" cy="84.54" r="3.5" fill="#dc2626"/>
+<line x1="614" y1="90" x2="632" y2="90" stroke="#dc2626" stroke-width="2.4"/>
+<text x="638" y="94" font-family="sans-serif" font-size="11" fill="#374151">p95_burst_latency_ms</text>
+<polyline points="85.92,82.24 96.05,76.25 126.43,76.90 177.05,74.91 278.31,78.31 582.08,79.41" fill="none" stroke="#16a34a" stroke-width="2.4"/>
+<circle cx="85.92" cy="82.24" r="3.5" fill="#16a34a"/>
+<circle cx="96.05" cy="76.25" r="3.5" fill="#16a34a"/>
+<circle cx="126.43" cy="76.90" r="3.5" fill="#16a34a"/>
+<circle cx="177.05" cy="74.91" r="3.5" fill="#16a34a"/>
+<circle cx="278.31" cy="78.31" r="3.5" fill="#16a34a"/>
+<circle cx="582.08" cy="79.41" r="3.5" fill="#16a34a"/>
+<line x1="614" y1="110" x2="632" y2="110" stroke="#16a34a" stroke-width="2.4"/>
+<text x="638" y="114" font-family="sans-serif" font-size="11" fill="#374151">max_burst_latency_ms</text>
+<polyline points="85.92,117.41 96.05,181.78 126.43,211.56 177.05,225.51 278.31,288.26 582.08,123.92" fill="none" stroke="#9333ea" stroke-width="2.4"/>
+<circle cx="85.92" cy="117.41" r="3.5" fill="#9333ea"/>
+<circle cx="96.05" cy="181.78" r="3.5" fill="#9333ea"/>
+<circle cx="126.43" cy="211.56" r="3.5" fill="#9333ea"/>
+<circle cx="177.05" cy="225.51" r="3.5" fill="#9333ea"/>
+<circle cx="278.31" cy="288.26" r="3.5" fill="#9333ea"/>
+<circle cx="582.08" cy="123.92" r="3.5" fill="#9333ea"/>
+<line x1="614" y1="130" x2="632" y2="130" stroke="#9333ea" stroke-width="2.4"/>
+<text x="638" y="134" font-family="sans-serif" font-size="11" fill="#374151">avg_syscalls_per_burst</text>
+<polyline points="85.92,324.59 96.05,302.16 126.43,282.70 177.05,231.51 278.31,93.07 582.08,321.35" fill="none" stroke="#ea580c" stroke-width="2.4"/>
+<circle cx="85.92" cy="324.59" r="3.5" fill="#ea580c"/>
+<circle cx="96.05" cy="302.16" r="3.5" fill="#ea580c"/>
+<circle cx="126.43" cy="282.70" r="3.5" fill="#ea580c"/>
+<circle cx="177.05" cy="231.51" r="3.5" fill="#ea580c"/>
+<circle cx="278.31" cy="93.07" r="3.5" fill="#ea580c"/>
+<circle cx="582.08" cy="321.35" r="3.5" fill="#ea580c"/>
+<line x1="614" y1="150" x2="632" y2="150" stroke="#ea580c" stroke-width="2.4"/>
+<text x="638" y="154" font-family="sans-serif" font-size="11" fill="#374151">throughput_bursts_per_s</text>
+<polyline points="85.92,77.98 96.05,77.98 126.43,77.98 177.05,77.98 278.31,77.98 582.08,77.98" fill="none" stroke="#0891b2" stroke-width="2.4"/>
+<circle cx="85.92" cy="77.98" r="3.5" fill="#0891b2"/>
+<circle cx="96.05" cy="77.98" r="3.5" fill="#0891b2"/>
+<circle cx="126.43" cy="77.98" r="3.5" fill="#0891b2"/>
+<circle cx="177.05" cy="77.98" r="3.5" fill="#0891b2"/>
+<circle cx="278.31" cy="77.98" r="3.5" fill="#0891b2"/>
+<circle cx="582.08" cy="77.98" r="3.5" fill="#0891b2"/>
+<line x1="614" y1="170" x2="632" y2="170" stroke="#0891b2" stroke-width="2.4"/>
+<text x="638" y="174" font-family="sans-serif" font-size="11" fill="#374151">trace_event_count</text>
+<polyline points="85.92,80.67 96.05,83.92 126.43,90.67 177.05,88.38 278.31,85.09 582.08,86.44" fill="none" stroke="#2563eb" stroke-width="2.4"/>
+<circle cx="85.92" cy="80.67" r="3.5" fill="#2563eb"/>
+<circle cx="96.05" cy="83.92" r="3.5" fill="#2563eb"/>
+<circle cx="126.43" cy="90.67" r="3.5" fill="#2563eb"/>
+<circle cx="177.05" cy="88.38" r="3.5" fill="#2563eb"/>
+<circle cx="278.31" cy="85.09" r="3.5" fill="#2563eb"/>
+<circle cx="582.08" cy="86.44" r="3.5" fill="#2563eb"/>
+<line x1="614" y1="190" x2="632" y2="190" stroke="#2563eb" stroke-width="2.4"/>
+<text x="638" y="194" font-family="sans-serif" font-size="11" fill="#374151">burst_count</text>
+<text x="334.0" y="416" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#111827">Burst gap (ms)</text>
+<text transform="translate(22 211.0) rotate(-90)" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#111827">Pearson r</text>
+</svg>

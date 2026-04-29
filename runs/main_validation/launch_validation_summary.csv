@@ -1,0 +1,5 @@
+target_metric,proxy_group,best_gap_ms,best_proxy_metric,sample_count,pearson_r,spearman_r,slope,intercept,mae_ms,rmse_ms
+ground_truth_total_time_ms,overall,20.00,throughput_bursts_per_s,30,-0.922793,-0.883224,-86.110919,460.678649,9.044127,10.996314
+ground_truth_total_time_ms,latency_shaped,20.00,avg_burst_latency_ms,30,0.913852,0.876322,0.803336,-67.861030,9.191823,11.588576
+ground_truth_wait_time_ms,overall,20.00,throughput_bursts_per_s,30,-0.921880,-0.796260,-80.045758,445.493826,8.293429,10.289812
+ground_truth_wait_time_ms,latency_shaped,20.00,avg_burst_latency_ms,30,0.914850,0.792029,0.748309,-46.310125,8.461233,10.723170

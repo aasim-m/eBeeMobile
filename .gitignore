@@ -1,5 +1,11 @@
 # Generated experiment outputs
-runs/
+runs/*
+!runs/main_validation/
+!runs/main_validation/*.csv
+!runs/main_validation/*.md
+!runs/main_validation/figures/
+!runs/main_validation/figures/*.svg
+runs/main_validation/workload_*/
 sample_runs/
 
 # Python cache files

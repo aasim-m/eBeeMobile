@@ -279,8 +279,11 @@ def format_launch_summary_section(summary_rows, figure_paths):
     if figure_paths:
         lines.append("Launch validation figures:")
         lines.append("")
-        for label, path in figure_paths:
+        for label, path, *rest in figure_paths:
+            caption = rest[0] if rest else "Compares the selected launch proxy against ground-truth launch time."
             lines.append(f"![{label}]({path})")
+            lines.append("")
+            lines.append(f"*{caption}*")
             lines.append("")
     return "\n".join(lines)
 
@@ -308,4 +311,3 @@ def format_validation_recommendations_section(title, rows):
         )
     lines.append("")
     return "\n".join(lines)
-

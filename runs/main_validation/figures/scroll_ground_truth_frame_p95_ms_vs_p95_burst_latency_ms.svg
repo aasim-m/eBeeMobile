@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="480" viewBox="0 0 760 480">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="380.0" y="28" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="700">Scroll Ground truth frame P95 (ms) vs P95 burst latency (ms)</text>
+<line x1="86" y1="54" x2="86" y2="404" stroke="#111827" stroke-width="1"/>
+<line x1="86" y1="404" x2="726" y2="404" stroke="#111827" stroke-width="1"/>
+<line x1="86.00" y1="54" x2="86.00" y2="404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="86.00" y="426" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">4.92</text>
+<line x1="86" y1="404.00" x2="726" y2="404.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="76" y="408.00" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">-1.0</text>
+<line x1="214.00" y1="54" x2="214.00" y2="404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="214.00" y="426" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">7.17</text>
+<line x1="86" y1="334.00" x2="726" y2="334.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="76" y="338.00" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">25.2</text>
+<line x1="342.00" y1="54" x2="342.00" y2="404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="342.00" y="426" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">9.41</text>
+<line x1="86" y1="264.00" x2="726" y2="264.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="76" y="268.00" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">51.4</text>
+<line x1="470.00" y1="54" x2="470.00" y2="404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="470.00" y="426" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">11.66</text>
+<line x1="86" y1="194.00" x2="726" y2="194.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="76" y="198.00" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">77.6</text>
+<line x1="598.00" y1="54" x2="598.00" y2="404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="598.00" y="426" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">13.90</text>
+<line x1="86" y1="124.00" x2="726" y2="124.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="76" y="128.00" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">103.8</text>
+<line x1="726.00" y1="54" x2="726.00" y2="404" stroke="#e5e7eb" stroke-width="1"/>
+<text x="726.00" y="426" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#374151">16.14</text>
+<line x1="86" y1="54.00" x2="726" y2="54.00" stroke="#e5e7eb" stroke-width="1"/>
+<text x="76" y="58.00" text-anchor="end" font-family="sans-serif" font-size="11" fill="#374151">130.0</text>
+<line x1="86.00" y1="381.88" x2="726.00" y2="85.33" stroke="#111827" stroke-width="2.5"/>
+<circle cx="550.07" cy="142.22" r="4.5" fill="#9333ea" fill-opacity="0.82"/>
+<circle cx="469.96" cy="152.90" r="4.5" fill="#ea580c" fill-opacity="0.82"/>
+<circle cx="518.59" cy="305.10" r="4.5" fill="#0891b2" fill-opacity="0.82"/>
+<circle cx="130.14" cy="371.85" r="4.5" fill="#4f46e5" fill-opacity="0.82"/>
+<circle cx="467.01" cy="99.50" r="4.5" fill="#9333ea" fill-opacity="0.82"/>
+<circle cx="388.65" cy="120.86" r="4.5" fill="#ea580c" fill-opacity="0.82"/>
+<circle cx="467.13" cy="289.08" r="4.5" fill="#0891b2" fill-opacity="0.82"/>
+<circle cx="157.38" cy="374.52" r="4.5" fill="#4f46e5" fill-opacity="0.82"/>
+<circle cx="493.04" cy="120.86" r="4.5" fill="#9333ea" fill-opacity="0.82"/>
+<circle cx="440.61" cy="110.18" r="4.5" fill="#ea580c" fill-opacity="0.82"/>
+<circle cx="433.68" cy="310.44" r="4.5" fill="#0891b2" fill-opacity="0.82"/>
+<circle cx="183.98" cy="379.86" r="4.5" fill="#4f46e5" fill-opacity="0.82"/>
+<circle cx="550.46" cy="99.50" r="4.5" fill="#9333ea" fill-opacity="0.82"/>
+<circle cx="559.76" cy="152.90" r="4.5" fill="#ea580c" fill-opacity="0.82"/>
+<circle cx="175.54" cy="315.78" r="4.5" fill="#0891b2" fill-opacity="0.82"/>
+<circle cx="228.55" cy="374.52" r="4.5" fill="#4f46e5" fill-opacity="0.82"/>
+<circle cx="534.77" cy="120.86" r="4.5" fill="#9333ea" fill-opacity="0.82"/>
+<circle cx="535.13" cy="152.90" r="4.5" fill="#ea580c" fill-opacity="0.82"/>
+<circle cx="282.61" cy="323.79" r="4.5" fill="#0891b2" fill-opacity="0.82"/>
+<circle cx="207.36" cy="379.86" r="4.5" fill="#4f46e5" fill-opacity="0.82"/>
+<circle cx="681.86" cy="152.90" r="4.5" fill="#9333ea" fill-opacity="0.82"/>
+<circle cx="308.85" cy="110.18" r="4.5" fill="#ea580c" fill-opacity="0.82"/>
+<circle cx="247.62" cy="315.78" r="4.5" fill="#0891b2" fill-opacity="0.82"/>
+<circle cx="337.28" cy="377.19" r="4.5" fill="#4f46e5" fill-opacity="0.82"/>
+<circle cx="612.57" cy="99.50" r="4.5" fill="#9333ea" fill-opacity="0.82"/>
+<circle cx="646.39" cy="88.82" r="4.5" fill="#ea580c" fill-opacity="0.82"/>
+<circle cx="505.98" cy="310.44" r="4.5" fill="#0891b2" fill-opacity="0.82"/>
+<circle cx="300.97" cy="379.86" r="4.5" fill="#4f46e5" fill-opacity="0.82"/>
+<circle cx="560.92" cy="142.22" r="4.5" fill="#9333ea" fill-opacity="0.82"/>
+<circle cx="335.58" cy="120.86" r="4.5" fill="#ea580c" fill-opacity="0.82"/>
+<circle cx="542.55" cy="294.42" r="4.5" fill="#0891b2" fill-opacity="0.82"/>
+<circle cx="146.42" cy="379.86" r="4.5" fill="#4f46e5" fill-opacity="0.82"/>
+<circle cx="469.24" cy="110.18" r="4.5" fill="#9333ea" fill-opacity="0.82"/>
+<circle cx="598.34" cy="131.54" r="4.5" fill="#ea580c" fill-opacity="0.82"/>
+<circle cx="633.37" cy="321.12" r="4.5" fill="#0891b2" fill-opacity="0.82"/>
+<circle cx="322.90" cy="377.19" r="4.5" fill="#4f46e5" fill-opacity="0.82"/>
+<circle cx="473.75" cy="99.50" r="4.5" fill="#9333ea" fill-opacity="0.82"/>
+<circle cx="269.90" cy="78.14" r="4.5" fill="#ea580c" fill-opacity="0.82"/>
+<circle cx="359.88" cy="318.45" r="4.5" fill="#0891b2" fill-opacity="0.82"/>
+<circle cx="238.10" cy="379.86" r="4.5" fill="#4f46e5" fill-opacity="0.82"/>
+<text x="406.0" y="456" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#111827">P95 burst latency (ms)</text>
+<text transform="translate(22 229.0) rotate(-90)" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#111827">Ground truth frame P95 (ms)</text>
+<circle cx="551" cy="72" r="4" fill="#9333ea"/>
+<text x="561" y="76" font-family="sans-serif" font-size="11" fill="#374151">page_load</text>
+<circle cx="551" cy="92" r="4" fill="#ea580c"/>
+<text x="561" y="96" font-family="sans-serif" font-size="11" fill="#374151">swipe_1</text>
+<circle cx="551" cy="112" r="4" fill="#0891b2"/>
+<text x="561" y="116" font-family="sans-serif" font-size="11" fill="#374151">swipe_2</text>
+<circle cx="551" cy="132" r="4" fill="#4f46e5"/>
+<text x="561" y="136" font-family="sans-serif" font-size="11" fill="#374151">swipe_3</text>
+</svg>

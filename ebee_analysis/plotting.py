@@ -213,7 +213,11 @@ def build_launch_figures(output_dir, results_dir, launch_gap_rows, episode_rows_
             slope,
             intercept,
         ):
-            figure_paths.append((label, f"figures/{filename}"))
+            caption = (
+                f"Compares `{row['proxy_metric']}` against Android `am start -W` `TotalTime` "
+                f"for the best matching burst gap ({row['gap_ms']} ms)."
+            )
+            figure_paths.append((label, f"figures/{filename}", caption))
 
     gap_path = figure_dir / "launch_gap_pearson_total_time.svg"
     if svg_gap_line(
@@ -223,7 +227,8 @@ def build_launch_figures(output_dir, results_dir, launch_gap_rows, episode_rows_
         ["episode_elapsed_s", "avg_burst_latency_ms", "p95_burst_latency_ms", "max_burst_latency_ms", "throughput_bursts_per_s"],
         "Launch TotalTime correlation by burst gap",
     ):
-        figure_paths.append(("Launch TotalTime correlation by burst gap", "figures/launch_gap_pearson_total_time.svg"))
+        caption = "Shows which burst-gap threshold gives the strongest correlation with launch `TotalTime`."
+        figure_paths.append(("Launch TotalTime correlation by burst gap", "figures/launch_gap_pearson_total_time.svg", caption))
     return figure_paths
 
 
@@ -268,10 +273,22 @@ def format_figure_gallery(title, figure_paths):
     if not figure_paths:
         return ""
     lines = [f"{title}:", ""]
-    for label, path in figure_paths:
+    for label, path, *rest in figure_paths:
+        caption = rest[0] if rest else figure_caption(label)
         lines.append(f"![{label}]({path})")
         lines.append("")
+        lines.append(f"*{caption}*")
+        lines.append("")
     return "\n".join(lines)
+
+
+def figure_caption(label):
+    if "correlation by burst gap" in label:
+        return "Shows how Pearson correlation changes as the syscall burst-gap threshold is varied."
+    if " vs " in label:
+        left, right = label.split(" vs ", 1)
+        return f"Compares the selected eBeeMobile proxy against {left.lower()}."
+    return "Summarizes the relationship between the selected proxy metric and ground truth."
 
 
 def build_family_figures(output_dir, results_dir, family, section_label, gap_rows, episode_rows_by_gap=None):
@@ -311,7 +328,11 @@ def build_family_figures(output_dir, results_dir, family, section_label, gap_row
             slope,
             intercept,
         ):
-            figure_paths.append((scatter_label, f"figures/{scatter_filename}"))
+            caption = (
+                f"Compares `{proxy_metric}` against `{target_metric}` using the best burst gap "
+                f"for this target ({row['gap_ms']} ms)."
+            )
+            figure_paths.append((scatter_label, f"figures/{scatter_filename}", caption))
 
         proxy_metrics = []
         for candidate in gap_rows:
@@ -332,7 +353,10 @@ def build_family_figures(output_dir, results_dir, family, section_label, gap_row
             proxy_metrics,
             gap_label,
         ):
-            figure_paths.append((gap_label, f"figures/{gap_filename}"))
+            caption = (
+                f"Shows how Pearson correlation with `{target_metric}` changes across burst-gap values "
+                "for the tested proxy metrics."
+            )
+            figure_paths.append((gap_label, f"figures/{gap_filename}", caption))
 
     return figure_paths
-
