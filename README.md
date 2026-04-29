@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="assets/eBeeMobile_ondark.svg" alt="eBeeMobile" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/eBeeMobile_ondark.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="assets/eBeeMobile.svg" />
+    <img src="assets/eBeeMobile.svg" alt="eBeeMobile" />
+  </picture>
 </p>
 
 # eBeeMobile
