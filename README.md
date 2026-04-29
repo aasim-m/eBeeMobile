@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/eBeeMobile_ondark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="assets/eBeeMobile.svg" />
-    <img src="assets/eBeeMobile.svg" alt="eBeeMobile" />
+    <source media="(prefers-color-scheme: dark)" srcset="assets/eBeeMobile_dark.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="assets/eBeeMobile_light.svg" />
+    <img src="assets/eBeeMobile_light.svg" alt="eBeeMobile" />
   </picture>
 </p>
 
