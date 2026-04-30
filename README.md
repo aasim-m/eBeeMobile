@@ -57,8 +57,12 @@ The project uses the following mapping from eBeeMetrics to Android:
 - `scripts/`: helper entrypoints for experiment execution, report generation, and rebuilding
 - [scripts/run_exploration_experiment.sh](scripts/run_exploration_experiment.sh): experiment runner for repeated Android workloads and trace capture
 - [scripts/analyze_results.py](scripts/analyze_results.py): burst segmentation and report generation
+- [scripts/plot_results_figures.py](scripts/plot_results_figures.py): generates report-ready workload result figures
+- [scripts/plot_validation_figures.py](scripts/plot_validation_figures.py): generates report-ready validation figures
 - [scripts/build_all.sh](scripts/build_all.sh): rebuilds the eBPF objects and Android user-space binaries
 - `runs/`: generated experiment outputs, optional to version
+- [runs/main_validation/](runs/main_validation/): curated 10-run validation dataset used for the final report
+- [figures/results/](figures/results/): PDF figures generated from the curated validation dataset for report use
 
 ## Derived Metrics
 
@@ -86,9 +90,13 @@ It also computes eBeeMetrics-style pseudo-request metrics by grouping timestampe
 - `adb` installed on the host
 - a connected and authorized Android device
 - `su` available on the device
+- Python 3 on the host
 - the bundled `file-stats`, `page-order`, and `alloc-latency` binaries present under this repository
 - Android NDK installed if you want to rebuild the bundled binaries
 - the Android eBPF dependency tree available if you want to rebuild the `.o` eBPF objects
+- the Python `reportlab` package if you want to regenerate the PDF figures under `figures/results/`
+
+The checked-in main validation dataset was collected on a Google Pixel 9 running Android 15. Results on other devices, Android versions, kernels, or background system states may differ.
 
 ## Building
 
@@ -232,7 +240,19 @@ This generates:
 - `memory_gap_sweep.csv`
 - `correlation_points.csv`
 - `figures/`
-- `report.md`
+- `report.md`: generated narrative report with workload summaries, validation notes, best-fit proxy results, and figure links
+
+The report-ready PDF figures used by the final project report can be regenerated from the curated dataset:
+
+```bash
+python3 scripts/plot_results_figures.py \
+  --input runs/main_validation \
+  --output figures/results
+
+python3 scripts/plot_validation_figures.py \
+  --input runs/main_validation \
+  --output figures/results/validation
+```
 
 ## Validation
 
@@ -242,6 +262,8 @@ The analysis pipeline has two roles:
 - validate burst-derived proxy metrics against independently collected ground truth
 
 By default, the summary tables in `report.md` use the configured `--burst-gap-ms` value. The validation sections also sweep `1, 2, 5, 10, 20, 50 ms` burst gaps and report which gap best fits each target metric.
+
+The curated [runs/main_validation/](runs/main_validation/) dataset is the main 10-run result set used for the final report. Its generated [report.md](runs/main_validation/report.md) is the quickest entry point for the workload summaries, validation tables, and SVG figure links.
 
 Ground-truth sources:
 

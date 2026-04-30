@@ -4,9 +4,11 @@ This directory is the curated 10-run validation result set for eBeeMobile.
 
 It contains the report-ready artifacts used to compare eBeeMobile burst-derived proxy metrics against non-invasive Android ground truth. The raw per-run workload captures remain local because they are large trace artifacts; the published files here are the compact summaries, validation tables, pseudo-request export, and figures needed to inspect the result.
 
+Start with `report.md` for the generated narrative report, including workload summaries, validation target notes, best-fit proxy results, and links to the generated figures.
+
 ## Collection
 
-The dataset was collected with 10 repetitions of the four workload families:
+The dataset was collected on a Google Pixel 9 running Android 15, with 10 repetitions of the four workload families:
 
 - `workload_a`: idle baseline
 - `workload_b`: app launch burst with Settings, browser `about:blank`, and Gallery launches
@@ -73,3 +75,16 @@ The best latency-shaped proxy was `avg_burst_latency_ms` at the same 20 ms burst
 - RMSE `11.588576 ms`
 
 These values compare eBeeMobile inferred metrics directly against ground truth; they are not workload-vs-idle baseline comparisons.
+
+## Additional Validation Highlights
+
+The final report also uses these representative best-fit relationships from the curated validation outputs:
+
+| Target | Best Proxy | Gap (ms) | N | Pearson r |
+| --- | --- | ---: | ---: | ---: |
+| Frame P90 | `max_burst_latency_ms` | 10.00 | 40 | 0.930868 |
+| Janky Frames | `max_burst_latency_ms` | 10.00 | 40 | 0.855928 |
+| Frame P99 | `max_burst_latency_ms` | 1.00 | 40 | 0.844547 |
+| Dalvik Heap PSS | `file_syscall_intensity` | 1.00 | 10 | 0.866039 |
+| Graphics PSS | `long_tail_share` | 1.00 | 10 | 0.801329 |
+| Total PSS | `long_tail_share` | 1.00 | 10 | 0.776984 |
