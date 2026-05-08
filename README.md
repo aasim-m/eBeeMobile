@@ -98,6 +98,20 @@ It also computes eBeeMetrics-style pseudo-request metrics by grouping timestampe
 
 The checked-in main validation dataset was collected on a Google Pixel 9 running Android 15. Results on other devices, Android versions, kernels, or background system states may differ.
 
+## Device Setup
+
+Before running new experiments, the Android device must have adb access, root access, and the required eBPF objects installed and pinned by Android.
+
+If the device was reset, reflashed, or updated, follow the setup guide before running the experiment script:
+
+- [Device setup and troubleshooting](docs/device_setup.md)
+
+A common symptom of missing or unpinned eBPF maps is:
+
+```text
+Failed to open map: No such file or directory
+```
+
 ## Building
 
 Rebuild all eBPF objects and Android user-space binaries:
